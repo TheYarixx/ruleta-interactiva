@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ruleta Interactiva</title>
+  <!-- Carga de fuentes de Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style id="app-style">
+    :root {
+      /* Variables para el tema claro (predeterminado) */
+      --bg-color: #f9fafb;
+      --primary-color: #3b82f6;
+      --secondary-color: #10b981;
+      --text-color: #1f2937;
+      --card-bg: #ffffff;
+      --border-color: #e5e7eb;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --button-hover: #2563eb;
+    }
+
+    /* Tema oscuro */
+    [data-theme="dark"] {
+      --bg-color: #1f2937;
+      --primary-color: #60a5fa;
+      --secondary-color: #34d399;
+      --text-color: #f3f4f6;
+      --card-bg: #374151;
+      --border-color: #4b5563;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+      --button-hover: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .theme-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-selector select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    @media (min-width: 992px) {
+      main {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .wheel-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .wheel-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      aspect-ratio: 1/1;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      box-shadow: var(--shadow);
+    }
+
+    .wheel-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50px;
+      height: 50px;
+      background-color: var(--card-bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      z-index: 2;
+    }
+
+    .wheel-pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 40px;
+      color: var(--primary-color);
+      z-index: 3;
+      font-size: 2rem;
+    }
+
+    .spin-button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 30px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      box-shadow: var(--shadow);
+    }
+
+    .spin-button:hover {
+      background-color: var(--button-hover);
+    }
+
+    .spin-button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .description-section, .options-section {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: var(--shadow);
+    }
+
+    .selected-title {
+      font-size: 1.8rem;
+      text-align: center;
+      margin-bottom: 15px;
+      color: var(--primary-color);
+      min-height: 50px;
+    }
+
+    .description-textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-size: 1rem;
+      resize: vertical;
+      margin-bottom: 20px;
+    }
+
+    .description-textarea:focus {
+      outline: 2px solid var(--primary-color);
+      border-color: transparent;
+    }
+
+    .options-section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: var(--secondary-color);
+    }
+
+    .option-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .form-group input, .form-group textarea {
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    .form-group input:focus, .form-group textarea:focus {
+      outline: 2px solid var(--secondary-color);
+      border-color: transparent;
+    }
+
+    .add-option-btn {
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .add-option-btn:hover {
+      filter: brightness(1.1);
+    }
+
+    .options-list {
+      margin-top: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .options-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .options-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .delete-option {
+      color: #ef4444;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+
+    /* Animación para el spinner */
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spinning {
+      animation: spin 8s cubic-bezier(0.1, 0.05, 0.05, 1.0) forwards;
+    }
+
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      background-color: var(--secondary-color);
+      color: white;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 1000;
+    }
+
+    .notification.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Ruleta Interactiva</h1>
+      <div class="theme-selector">
+        <label for="theme">Tema:</label>
+        <select id="theme">
+          <option value="light">Claro Minimalista</option>
+          <option value="dark">Oscuro Elegante</option>
+        </select>
+      </div>
+    </header>
+
+    <main>
+      <section class="wheel-section">
+        <div class="wheel-container">
+          <div class="wheel-pointer">
+            <i class="fas fa-caret-down"></i>
+          </div>
+          <canvas id="wheelCanvas"></canvas>
+          <div class="wheel-center"></div>
+        </div>
+        <button id="spinButton" class="spin-button">
+          <i class="fas fa-sync-alt"></i> Girar Ruleta
+        </button>
+      </section>
+
+      <div>
+        <section class="description-section">
+          <h2 id="selectedTitle" class="selected-title">Gira la ruleta para seleccionar una opción</h2>
+          <textarea id="descriptionTextarea" class="description-textarea" placeholder="Escribe una descripción para la opción seleccionada..."></textarea>
+        </section>
+
+        <section class="options-section">
+          <h2>Añadir Opciones</h2>
+          <form id="optionForm" class="option-form">
+            <div class="form-group">
+              <label for="optionTitle">Título</label>
+              <input type="text" id="optionTitle" required placeholder="Ingresa el título de la opción">
+            </div>
+            <div class="form-group">
+              <label for="optionDescription">Descripción Inicial (opcional)</label>
+              <textarea id="optionDescription" placeholder="Descripción inicial para esta opción..."></textarea>
+            </div>
+            <button type="submit" class="add-option-btn">
+              <i class="fas fa-plus"></i> Añadir Opción
+            </button>
+          </form>
+          
+          <div class="options-list" id="optionsList">
+            <!-- Las opciones se generarán dinámicamente aquí -->
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="notification" id="notification">Cambios guardados</div>
+
+  <script id="app-script">
+    // Constantes y variables globales
+    const wheelCanvas = document.getElementById('wheelCanvas');
+    const ctx = wheelCanvas.getContext('2d');
+    const spinButton = document.getElementById('spinButton');
+    const selectedTitle = document.getElementById('selectedTitle');
+    const descriptionTextarea = document.getElementById('descriptionTextarea');
+    const optionForm = document.getElementById('optionForm');
+    const optionTitleInput = document.getElementById('optionTitle');
+    const optionDescriptionInput = document.getElementById('optionDescription');
+    const optionsList = document.getElementById('optionsList');
+    const themeSelector = document.getElementById('theme');
+    const notification = document.getElementById('notification');
+
+    // Configuración inicial
+    let options = [];
+    let currentAngle = 0;
+    let isSpinning = false;
+    let selectedIndex = -1;
+    let rotationAngle = 0;
+
+    // Colores para las secciones de la ruleta
+    const colors = [
+      '#4f46e5', '#2563eb', '#3b82f6', '#60a5fa', '#7dd3fc',
+      '#0891b2', '#0d9488', '#10b981', '#059669', '#16a34a'
+    ];
+
+    // Inicializar la aplicación
+    function init() {
+      // Cargar opciones desde localStorage o usar predeterminadas
+      loadOptions();
+      
+      // Configurar eventos
+      setupEventListeners();
+      
+      // Dibujar la ruleta
+      resizeCanvas();
+      drawWheel();
+      
+      // Cargar tema
+      loadTheme();
+    }
+
+    // Configuración de los event listeners
+    function setupEventListeners() {
+      // Evento de cambio de tamaño de ventana
+      window.addEventListener('resize', resizeCanvas);
+      
+      // Evento para girar la ruleta
+      spinButton.addEventListener('click', spinWheel);
+      
+      // Evento para guardar la descripción cuando cambia
+      descriptionTextarea.addEventListener('input', debounce(saveDescription, 500));
+      
+      // Evento para agregar una nueva opción
+      optionForm.addEventListener('submit', addOption);
+      
+      // Evento para cambiar el tema
+      themeSelector.addEventListener('change', changeTheme);
+    }
+
+    // Función para cargar opciones desde localStorage o usar predeterminadas
+    function loadOptions() {
+      const savedOptions = localStorage.getItem('rouletteOptions');
+      
+      if (savedOptions) {
+        options = JSON.parse(savedOptions);
+      } else {
+        // Opciones predeterminadas
+        options = [
+          { title: 'Opción 1', description: 'Descripción para la opción 1' },
+          { title: 'Opción 2', description: 'Descripción para la opción 2' },
+          { title: 'Opción 3', description: 'Descripción para la opción 3' },
+          { title: 'Opción 4', description: 'Descripción para la opción 4' }
+        ];
+        saveOptionsToLocalStorage();
+      }
+      
+      updateOptionsList();
+    }
+
+    // Redimensionar el canvas para que sea responsivo
+    function resizeCanvas() {
+      const container = wheelCanvas.parentElement;
+      const size = Math.min(container.offsetWidth, container.offsetHeight);
+      
+      wheelCanvas.width = size;
+      wheelCanvas.height = size;
+      
+      drawWheel();
+    }
+
+    // Dibujar la ruleta
+    function drawWheel() {
+      if (options.length === 0) return;
+
+      const width = wheelCanvas.width;
+      const height = wheelCanvas.height;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const radius = Math.min(width, height) / 2 - 5;
+      
+      ctx.clearRect(0, 0, width, height);
+      
+      // Dibujar las secciones de la ruleta
+      const anglePerSection = (2 * Math.PI) / options.length;
+      
+      options.forEach((option, index) => {
+        const startAngle = index * anglePerSection + rotationAngle;
+        const endAngle = (index + 1) * anglePerSection + rotationAngle;
+        
+        // Dibujar el sector
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        
+        ctx.fillStyle = colors[index % colors.length];
+        ctx.fill();
+        
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'white';
+        ctx.stroke();
+        
+        // Dibujar el texto
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        const textAngle = startAngle + (anglePerSection / 2);
+        ctx.rotate(textAngle);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = 'white';
+        ctx.font = `${radius * 0.1}px Poppins, sans-serif`;
+        
+        // Limitar la longitud del título para que quepa
+        let title = option.title;
+        if (title.length > 15) {
+          title = title.substring(0, 12) + '...';
+        }
+        
+        ctx.fillText(title, radius * 0.85, 5);
+        ctx.restore();
+      });
+    }
+
+    // Girar la ruleta
+    function spinWheel() {
+      if (isSpinning || options.length === 0) return;
+      
+      isSpinning = true;
+      spinButton.disabled = true;
+      selectedTitle.textContent = 'Girando...';
+      descriptionTextarea.value = '';
+      
+      // Añadir clase de animación al canvas
+      wheelCanvas.classList.add('spinning');
+      
+      // Calcular rotación aleatoria (2-10 vueltas completas) más un offset aleatorio
+      const spins = 2 + Math.random() * 8;
+      const spinAngle = spins * Math.PI * 2;
+      const randomAngle = Math.random() * Math.PI * 2;
+      
+      // Determinar el ángulo final
+      const targetAngle = rotationAngle + spinAngle + randomAngle;
+      
+      // Usar requestAnimationFrame para animar la ruleta
+      const spinStart = performance.now();
+      const spinDuration = 5000; // 5 segundos de giro
+      
+      function animateSpin(timestamp) {
+        const elapsed = timestamp - spinStart;
+        const progress = Math.min(elapsed / spinDuration, 1);
+        
+        // Función de easing para hacer que la ruleta se detenga gradualmente
+        const easeOut = function(t) {
+          return 1 - Math.pow(1 - t, 3);
+        };
+        
+        rotationAngle = rotationAngle + (targetAngle - rotationAngle) * easeOut(progress);
+        drawWheel();
+        
+        if (progress < 1) {
+          requestAnimationFrame(animateSpin);
+        } else {
+          finishSpin(targetAngle);
+        }
+      }
+      
+      requestAnimationFrame(animateSpin);
+    }
+
+    // Finalizar el giro de la ruleta
+    function finishSpin(finalAngle) {
+      rotationAngle = finalAngle % (Math.PI * 2);
+      wheelCanvas.classList.remove('spinning');
+      
+      // Calcular qué opción ha sido seleccionada
+      const anglePerSection = (2 * Math.PI) / options.length;
+      const normalizedAngle = (2 * Math.PI - (rotationAngle % (2 * Math.PI))) % (2 * Math.PI);
+      selectedIndex = Math.floor(normalizedAngle / anglePerSection) % options.length;
+      
+      // Actualizar la UI con la opción seleccionada
+      selectedTitle.textContent = options[selectedIndex].title;
+      descriptionTextarea.value = options[selectedIndex].description || '';
+      
+      isSpinning = false;
+      spinButton.disabled = false;
+      
+      // Dibujar la ruleta en su posición final
+      drawWheel();
+    }
+
+    // Guardar la descripción de la opción seleccionada
+    function saveDescription() {
+      if (selectedIndex >= 0 && selectedIndex < options.length) {
+        options[selectedIndex].description = descriptionTextarea.value;
+        saveOptionsToLocalStorage();
+        showNotification('Descripción guardada');
+      }
+    }
+
+    // Añadir una nueva opción a la ruleta
+    function addOption(e) {
+      e.preventDefault();
+      
+      const title = optionTitleInput.value.trim();
+      const description = optionDescriptionInput.value.trim();
+      
+      if (title) {
+        options.push({ title, description });
+        saveOptionsToLocalStorage();
+        updateOptionsList();
+        drawWheel();
+        
+        // Limpiar el formulario
+        optionTitleInput.value = '';
+        optionDescriptionInput.value = '';
+        
+        showNotification('Opción añadida correctamente');
+      }
+    }
+
+    // Eliminar una opción de la ruleta
+    function deleteOption(index) {
+      if (index >= 0 && index < options.length) {
+        options.splice(index, 1);
+        saveOptionsToLocalStorage();
+        updateOptionsList();
+        drawWheel();
+        
+        if (selectedIndex === index) {
+          selectedIndex = -1;
+          selectedTitle.textContent = 'Gira la ruleta para seleccionar una opción';
+          descriptionTextarea.value = '';
+        } else if (selectedIndex > index) {
+          selectedIndex--;
+        }
+        
+        showNotification('Opción eliminada');
+      }
+    }
+
+    // Actualizar la lista visual de opciones
+    function updateOptionsList() {
+      optionsList.innerHTML = '';
+      
+      if (options.length === 0) {
+        const emptyMessage = document.createElement('p');
+        emptyMessage.textContent = 'No hay opciones disponibles. Añade al menos una opción.';
+        optionsList.appendChild(emptyMessage);
+        return;
+      }
+      
+      options.forEach((option, index) => {
+        const listItem = document.createElement('div');
+        listItem.className = 'options-list-item';
+        
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = option.title;
+        
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'delete-option';
+        deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteButton.addEventListener('click', () => deleteOption(index));
+        
+        listItem.appendChild(titleSpan);
+        listItem.appendChild(deleteButton);
+        optionsList.appendChild(listItem);
+      });
+    }
+
+    // Guardar opciones en localStorage
+    function saveOptionsToLocalStorage() {
+      localStorage.setItem('rouletteOptions', JSON.stringify(options));
+    }
+
+    // Función para cambiar el tema
+    function changeTheme() {
+      const theme = themeSelector.value;
+      document.body.setAttribute('data-theme', theme);
+      localStorage.setItem('rouletteTheme', theme);
+    }
+
+    // Cargar tema desde localStorage
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('rouletteTheme');
+      if (savedTheme) {
+        themeSelector.value = savedTheme;
+        document.body.setAttribute('data-theme', savedTheme);
+      }
+    }
+
+    // Mostrar notificación
+    function showNotification(message) {
+      notification.textContent = message;
+      notification.classList.add('show');
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 2000);
+    }
+
+    // Función de debounce para evitar muchas llamadas seguidas
+    function debounce(func, delay) {
+      let timeout;
+      return function() {
+        const context = this;
+        const args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+      };
+    }
+
+    // Inicializar la aplicación cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
